@@ -1,7 +1,6 @@
 require 'gosu'
 
 require_relative 'hang_man'
-require_relative 'hangman_view'
 require_relative 'random_word'
 require_relative 'balloon'
 require_relative 'stickfigure'
@@ -14,8 +13,7 @@ class GameWindow < Gosu::Window
     self.caption = "Hangman :P"
 
     random_word = RandomWord.new('words.txt').get_word
-    random_word = "hang"
-    @hangman = HangMan.new("hang", turns: GAME_TURNS)
+    @hangman = HangMan.new(random_word, turns: GAME_TURNS)
 
     @background_image = Gosu::Image.new("media/windows-xp-background.jpg")
     @stickfigure = Stickfigure.new(800, 600, self)
