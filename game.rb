@@ -3,6 +3,8 @@ require 'gosu'
 require_relative 'hang_man'
 require_relative 'hangman_view'
 require_relative 'random_word'
+require_relative 'balloon'
+require_relative 'stickfigure'
 
 class GameWindow < Gosu::Window
   GAME_TURNS = 8
@@ -16,9 +18,8 @@ class GameWindow < Gosu::Window
     @hangman = HangMan.new("hang", turns: GAME_TURNS)
 
     @background_image = Gosu::Image.new("media/windows-xp-background.jpg")
-    @stickfigure = Gosu::Image.new("media/stickfigure288px.png")
+    @stickfigure = Stickfigure.new(800, 600, self)
     @balloons = []
-    @balloon = Gosu::Image.new("media/balloon.png")
 
     @progress = Gosu::Font.new(50)
     @tried_letters = Gosu::Font.new(50)
@@ -28,25 +29,35 @@ class GameWindow < Gosu::Window
     @message = ""
   end
 
+  def move_up
+    @balloons.each { |balloon| balloon.move_up(10) }
+    @stickfigure.move_up(10)
+  end
+
   def update
     if @hangman.won?
       @message = "you win"
     elsif @hangman.lost?
       @message = "you lose"
+      move_up
+    end
+
+    while @balloons.count < (GAME_TURNS - @hangman.remaining_turns)
+      @balloons << Balloon.new(800 + (rand(300)), 300, self, @stickfigure)
     end
   end
 
   def draw
     @background_image.draw(0, 0, 0)
-    @stickfigure.draw(800, 600, 1)
 
-    @balloon.draw(800, 300, 1)
+    @stickfigure.draw
+    @balloons.each { |balloon| balloon.draw }
 
-    @progress.draw(@hangman.word_progress, 10, 10, 1, 1.0, 1.0, 0xff_000000)
+    @progress.draw(@hangman.word_progress, 10, 10, 2, 1.0, 1.0, 0xff_000000)
     # could probs exclude letters that were correct
-    @tried_letters.draw("Tried letters: #{@hangman.tried_letters.join(',')}", 10, 100, 1, 1.0, 1.0, 0xff_000000)
-    @game_message.draw(@message, 10, 200, 1, 1.0, 1.0, 0xff_000000)
-    @progress.draw("Remaining turns #{@hangman.remaining_turns}", 10, 300, 1, 1.0, 1.0, 0xff_000000)
+    @tried_letters.draw("Tried letters: #{@hangman.tried_letters.join(',')}", 10, 100, 2, 1.0, 1.0, 0xff_000000)
+    @game_message.draw(@message, 10, 200, 2, 1.0, 1.0, 0xff_000000)
+    @progress.draw("Remaining turns #{@hangman.remaining_turns}", 10, 300, 2, 1.0, 1.0, 0xff_000000)
   end
 
   def button_down(id)
@@ -54,10 +65,8 @@ class GameWindow < Gosu::Window
       close
     else
       char = button_id_to_char(id)
-      puts char
       if char =~ /[[:alpha:]]/
         begin
-          puts char
           @hangman.play_turn(char)
           @message = ""
         rescue HangMan::InvalidLetterError => e
