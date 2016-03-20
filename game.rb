@@ -13,6 +13,7 @@ class GameWindow < Gosu::Window
     self.caption = "Hangman :P"
 
     random_word = RandomWord.new('words.txt').get_word
+    random_word = 'hang'
     @hangman = HangMan.new(random_word, turns: GAME_TURNS)
 
     @background_image = Gosu::Image.new("media/windows-xp-background.jpg")
@@ -33,15 +34,16 @@ class GameWindow < Gosu::Window
   end
 
   def update
+    while @balloons.count < (GAME_TURNS - @hangman.remaining_turns) && !@hangman.finished?
+      @balloons << Balloon.new(800 + (rand(300)), 300, self, @stickfigure)
+    end
+
     if @hangman.won?
       @message = "you win"
+      @balloons = []
     elsif @hangman.lost?
       @message = "you lose"
       move_up
-    end
-
-    while @balloons.count < (GAME_TURNS - @hangman.remaining_turns)
-      @balloons << Balloon.new(800 + (rand(300)), 300, self, @stickfigure)
     end
   end
 
